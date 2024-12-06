@@ -138,7 +138,42 @@ void show3DObjects(std::vector<BoundingBox> &boundingBoxes, cv::Size worldSize, 
 // associate a given bounding box with the keypoints it contains
 void clusterKptMatchesWithROI(BoundingBox &boundingBox, std::vector<cv::KeyPoint> &kptsPrev, std::vector<cv::KeyPoint> &kptsCurr, std::vector<cv::DMatch> &kptMatches)
 {
-    // ...
+    // find the euclidean distance of keypoint matches in the prev frame to the curr frame
+    std::vector<float> distKeypointMatches;
+    for (auto it = kptMatches.begin(); it != kptMatches.end(); ++it)
+    {
+        float dist;
+        cv::KeyPoint keypointPrevFrame, keypointCurrFrame;
+        keypointPrevFrame = kptsPrev[it->queryIdx];
+        keypointCurrFrame = kptsCurr[it->trainIdx];
+        if (boundingBox.roi.contains(keypointCurrFrame.pt))
+        {
+            cv::Point2f diff = keypointCurrFrame.pt - keypointPrevFrame.pt; 
+            float eucDist = cv::sqrt(diff.x * diff.x + diff.y * diff.y);
+            distKeypointMatches.push_back(eucDist); 
+        }
+    }
+    // compute the distance mean
+    float distMean = std::accumulate(distance.begin(), distance.end(), 0.0) / distance.size();
+    // remove outlier keypoint matches from the bounding box
+    for (auto it = kptMatches.begin(); it != kptMatches.end(); ++it)
+    {
+        cv::KeyPoint keypointPrevFrame, keypointCurrFrame;
+        keypointPrevFrame = kptsPrev[it->queryIdx];
+        keypointCurrFrame = kptsCurr[it->trainIdx];
+        if(boundingBox.roi.contains(keypointCurrFrame.pt))
+        {
+            cv::Point2f diff = keypointCurrFrame.pt - keypointPrevFrame.pt; 
+            float eucDist = cv::sqrt(diff.x * diff.x + diff.y * diff.y);
+            // if distance is less than threshold
+            if(eucDist < distMean * 0.75)
+            {
+                // add the matches and keypoints into Box data
+                boundingBox.keypoints.push_back(keypointCurrFrame);
+                boundingBox.kptMatches.push_back(*it);
+            }
+        }
+    }
 }
 
 
@@ -213,13 +248,21 @@ void matchBoundingBoxes(std::vector<cv::DMatch> &matches, std::map<int, int> &bb
         }
     }
 
-    // Create a map to count the occurrences of each key-value pair
+    // Find the unique key from the bbTempMatchesMap
+    // And create a map to count the occurrences of each key-value pair
+    std::set<int> uniqueKeys;
+    int lastKey = INT_MIN; 
     std::map<std::pair<int, int>, int> mapOccurences;
     for (auto bbit = bbTempMatchesMap.begin(); bbit != bbTempMatchesMap.end(); ++bbit)
     {
-        // Create a pair from the key and value
+        // Check the unique key
+        if (bbit->first != lastKey)
+        {
+            uniqueKeys.insert(bbit->first);
+            lastKey = bbit->first;
+        }
+        // Make pair
         std::pair<int, int> keyValPair = std::make_pair(bbit->first, bbit->second);
-
         // Check if the pair already exists in count_map
         if (mapOccurences.find(keyValPair) == mapOccurences.end())
         {
