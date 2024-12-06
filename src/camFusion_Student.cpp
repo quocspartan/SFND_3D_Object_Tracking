@@ -135,6 +135,28 @@ void show3DObjects(std::vector<BoundingBox> &boundingBoxes, cv::Size worldSize, 
 }
 
 
+
+static float percentile(const std::vector<float> &dataIn, float p)
+{
+    std::vector<float> data = dataIn;
+    std::sort(data.begin(), data.end());
+
+    int N = data.size();
+    float n = (N - 1) * p + 1;
+
+    // If n is an integer, then percentile is a data point
+    if (n == floor(n))
+    {
+        return data[n - 1];
+    }
+    else
+    {
+        int k = floor(n);
+        float d = n - k;
+        return data[k - 1] + d * (data[k] - data[k - 1]);
+    }
+}
+
 // associate a given bounding box with the keypoints it contains
 void clusterKptMatchesWithROI(BoundingBox &boundingBox, std::vector<cv::KeyPoint> &kptsPrev, std::vector<cv::KeyPoint> &kptsCurr, std::vector<cv::DMatch> &kptMatches)
 {
@@ -142,7 +164,6 @@ void clusterKptMatchesWithROI(BoundingBox &boundingBox, std::vector<cv::KeyPoint
     std::vector<float> distKeypointMatches;
     for (auto it = kptMatches.begin(); it != kptMatches.end(); ++it)
     {
-        float dist;
         cv::KeyPoint keypointPrevFrame, keypointCurrFrame;
         keypointPrevFrame = kptsPrev[it->queryIdx];
         keypointCurrFrame = kptsCurr[it->trainIdx];
@@ -153,25 +174,28 @@ void clusterKptMatchesWithROI(BoundingBox &boundingBox, std::vector<cv::KeyPoint
             distKeypointMatches.push_back(eucDist); 
         }
     }
-    // compute the distance mean
-    float distMean = std::accumulate(distance.begin(), distance.end(), 0.0) / distance.size();
-    // remove outlier keypoint matches from the bounding box
-    for (auto it = kptMatches.begin(); it != kptMatches.end(); ++it)
+    // Compute q1, q3 and interquartile range
+    float q1 = percentile(distKeypointMatches, 0.25f);
+    float q3 = percentile(distKeypointMatches, 0.75f);
+    float iqr = q3 - q1;
+
+    // Iterate through the matched keypoint pairs in the current bounding box and remove the ones which are outliers from the bounding box
+    auto bbit = boundingBox.kptMatches.begin();
+    while (bbit != boundingBox.kptMatches.end())
     {
         cv::KeyPoint keypointPrevFrame, keypointCurrFrame;
-        keypointPrevFrame = kptsPrev[it->queryIdx];
-        keypointCurrFrame = kptsCurr[it->trainIdx];
-        if(boundingBox.roi.contains(keypointCurrFrame.pt))
+        keypointPrevFrame = kptsPrev[bbit->queryIdx];
+        keypointCurrFrame = kptsCurr[bbit->trainIdx];
+        cv::Point2f diff = keypointCurrFrame.pt - keypointPrevFrame.pt; 
+        float eucDist = cv::sqrt(diff.x * diff.x + diff.y * diff.y);
+        if ((eucDist < (q1 - 1.5 * iqr)) || (eucDist > (q3 + 1.5 * iqr)))
         {
-            cv::Point2f diff = keypointCurrFrame.pt - keypointPrevFrame.pt; 
-            float eucDist = cv::sqrt(diff.x * diff.x + diff.y * diff.y);
-            // if distance is less than threshold
-            if(eucDist < distMean * 0.75)
-            {
-                // add the matches and keypoints into Box data
-                boundingBox.keypoints.push_back(keypointCurrFrame);
-                boundingBox.kptMatches.push_back(*it);
-            }
+            // erase() returns the next element
+            bbit = boundingBox.kptMatches.erase(bbit);
+        }
+        else
+        {
+            ++bbit;
         }
     }
 }
@@ -233,19 +257,6 @@ void matchBoundingBoxes(std::vector<cv::DMatch> &matches, std::map<int, int> &bb
             bbTempMatchesMap.insert(std::make_pair(prevImgBoxID, currImgBoxID));
         }
 
-    }
-
-    // find the unique key from the bbTempMatchesMap
-    std::set<int> uniqueKeys;
-    int lastKey = INT_MIN; 
-
-    for (auto bbit = bbTempMatchesMap.begin(); bbit != bbTempMatchesMap.end(); ++bbit)
-    {
-        if (bbit->first != lastKey)
-        {
-            uniqueKeys.insert(bbit->first);
-            lastKey = bbit->first;
-        }
     }
 
     // Find the unique key from the bbTempMatchesMap
