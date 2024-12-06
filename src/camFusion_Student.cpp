@@ -159,5 +159,105 @@ void computeTTCLidar(std::vector<LidarPoint> &lidarPointsPrev,
 
 void matchBoundingBoxes(std::vector<cv::DMatch> &matches, std::map<int, int> &bbBestMatches, DataFrame &prevFrame, DataFrame &currFrame)
 {
-    // ...
+    std::multimap<int, int> bbTempMatchesMap;
+    // Loop over all the keypoint match pairs
+    for (auto matchIt = matches.begin(); matchIt != matches.end(); ++matchIt)
+    {
+        int prevImgBoxID = -1;
+        int currImgBoxID = -1;
+
+        // Loop through all bounding boxes in previous image and find the box ID of the 'query' keypoint
+        for (auto bbit = prevFrame.boundingBoxes.begin(); bbit != prevFrame.boundingBoxes.end(); ++bbit)
+        {
+            cv::KeyPoint keyPt;
+            keyPt = prevFrame.keypoints[matchIt->queryIdx];
+            if (bbit->roi.contains(keyPt.pt))
+            {
+                bbit->keypoints.push_back(keyPt);
+                prevImgBoxID = bbit->boxID;
+                break;
+            }
+        }
+
+        // Loop through all bounding boxes in current image and find the box ID of the 'train' keypoint
+        for (auto bbit = currFrame.boundingBoxes.begin(); bbit != currFrame.boundingBoxes.end(); ++bbit)
+        {
+            cv::KeyPoint keyPt;
+            keyPt = currFrame.keypoints[matchIt->trainIdx];
+            if (bbit->roi.contains(keyPt.pt))
+            {
+                bbit->keypoints.push_back(keyPt);
+                currImgBoxID = bbit->boxID;
+                break;
+            }
+        }
+
+        // Save the box ID pairs into bbTempMatchesMap, only consider if keypoint match pairs appear in both current and previous data frame
+        if ((prevImgBoxID != -1) && (currImgBoxID != -1))
+        {
+            bbTempMatchesMap.insert(std::make_pair(prevImgBoxID, currImgBoxID));
+        }
+
+    }
+
+    // find the unique key from the bbTempMatchesMap
+    std::set<int> uniqueKeys;
+    int lastKey = INT_MIN; 
+
+    for (auto bbit = bbTempMatchesMap.begin(); bbit != bbTempMatchesMap.end(); ++bbit)
+    {
+        if (bbit->first != lastKey)
+        {
+            uniqueKeys.insert(bbit->first);
+            lastKey = bbit->first;
+        }
+    }
+
+    // Create a map to count the occurrences of each key-value pair
+    std::map<std::pair<int, int>, int> mapOccurences;
+    for (auto bbit = bbTempMatchesMap.begin(); bbit != bbTempMatchesMap.end(); ++bbit)
+    {
+        // Create a pair from the key and value
+        std::pair<int, int> keyValPair = std::make_pair(bbit->first, bbit->second);
+
+        // Check if the pair already exists in count_map
+        if (mapOccurences.find(keyValPair) == mapOccurences.end())
+        {
+            // If not, then add into the map
+            mapOccurences.insert(std::make_pair(keyValPair, 1));
+        }
+        else
+        {
+            // If found, then increase the count
+            mapOccurences[keyValPair]++;
+        }
+    }
+
+    // Iterate through each unique bounding box IDs in the previous image, to find the one with highest occurences
+    for (auto ukit = uniqueKeys.begin(); ukit != uniqueKeys.end(); ++ukit)
+    {
+        int bbIdx1 = -1; // bounding box index
+        int bbIdx2 = -1;
+        int maxKeypointCount = INT_MIN;
+    
+        for (auto mapit = mapOccurences.begin(); mapit != mapOccurences.end(); ++mapit)
+        {
+            int currKeypointCount = mapit->second;
+
+            if (mapit->first.first == *ukit)
+            {
+                if (currKeypointCount >= maxKeypointCount)
+                {
+                    maxKeypointCount = currKeypointCount;
+                    bbIdx1 = mapit->first.first;
+                    bbIdx2 = mapit->first.second;
+                }
+            }
+        }
+
+        if ((bbIdx1 != -1) && (bbIdx2 != -1))
+        {
+            bbBestMatches.insert(std::make_pair(bbIdx1, bbIdx2));
+        }
+    }
 }
