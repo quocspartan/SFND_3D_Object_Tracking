@@ -226,8 +226,50 @@ void clusterKptMatchesWithROI(BoundingBox &boundingBox, std::vector<cv::KeyPoint
 // Compute time-to-collision (TTC) based on keypoint correspondences in successive images
 void computeTTCCamera(std::vector<cv::KeyPoint> &kptsPrev, std::vector<cv::KeyPoint> &kptsCurr, 
                       std::vector<cv::DMatch> kptMatches, double frameRate, double &TTC, cv::Mat *visImg)
-{
-    // ...
+{   
+    // compute distance ratio between all matches keypoints
+    vector<float> vDistRatios; 
+    for (auto kpit1 = kptMatches.begin(); kpit1 != kptMatches.end() - 1; ++kpit1)
+    {
+        cv::KeyPoint keypointOuterCurr = kptsCurr.at(kpit1->trainIdx);
+        cv::KeyPoint keypointOuterPrev = kptsPrev.at(kpit1->queryIdx);
+
+        for (auto kpit2 = kptMatches.begin() + 1; kpit2 != kptMatches.end(); ++kpit2)
+        {
+            double minDist = 100.0; // min. required distance in pixels
+
+            // get next keypoint and its matched partner in the prev. frame
+            cv::KeyPoint keypointInnerCurr = kptsCurr.at(kpit2->trainIdx);
+            cv::KeyPoint keypointInnerPrev = kptsPrev.at(kpit2->queryIdx);
+
+            // compute distances and distance ratios
+            cv::Point2f diff = keypointOuterCurr.pt - keypointInnerCurr.pt;
+            float distCurr = cv::sqrt(diff.x * diff.x + diff.y * diff.y);
+            diff = keypointOuterPrev.pt - keypointInnerPrev.pt;
+            float distPrev = cv::sqrt(diff.x * diff.x + diff.y * diff.y);
+
+            if (distPrev > std::numeric_limits<float>::epsilon() && distCurr >= minDist)
+            {
+                float distRatio = distCurr / distPrev;
+                vDistRatios.push_back(distRatio);
+            }
+        }
+    }
+    // check if vDistRatios size is 0
+    if (vDistRatios.size() == 0)
+    {
+        TTC = NAN;
+        return;
+    }
+
+    // compute median dist. ratio to remove outlier influence
+    std::sort(vDistRatios.begin(), vDistRatios.end());
+    int medIndex = floor(vDistRatios.size() / 2.0);
+    float medDistRatio = vDistRatios.size() % 2 == 0 ? (vDistRatios[medIndex - 1] + vDistRatios[medIndex]) / 2.0 : vDistRatios[medIndex]; 
+
+    // compute camera-based TTC from distance ratios
+    float meanDistRatio = std::accumulate(vDistRatios.begin(), vDistRatios.end(), 0.0) / vDistRatios.size();
+    TTC = -1 / frameRate / (1 - meanDistRatio);
 }
 
 
