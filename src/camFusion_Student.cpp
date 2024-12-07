@@ -221,6 +221,8 @@ void clusterKptMatchesWithROI(BoundingBox &boundingBox, std::vector<cv::KeyPoint
             ++bbit;
         }
     }
+    cout << "Debug: q1: " << q1 << " - q3: " << q3 << " - iqr: " << iqr << endl; 
+    cout << "Debug: kptMatches size: " << boundingBox.kptMatches.size() << endl;     
 }
 
 
@@ -270,7 +272,13 @@ void computeTTCCamera(std::vector<cv::KeyPoint> &kptsPrev, std::vector<cv::KeyPo
 
     // compute camera-based TTC from distance ratios
     float meanDistRatio = std::accumulate(vDistRatios.begin(), vDistRatios.end(), 0.0) / vDistRatios.size();
-    TTC = -1 / frameRate / (1 - meanDistRatio);
+    float ttcCamCurr = -1 / frameRate / (1 - meanDistRatio);
+    float betaCamCoef = 0.15; 
+    static double ttcCamPrev = 0; 
+    TTC = (1 - betaCamCoef) * ttcCamPrev + betaCamCoef * ttcCamCurr; 
+    cout << "Debug: meanDistRatio: " << meanDistRatio << " - TTC Cam: " << TTC << endl; 
+    cout << "Debug: ttcCamPrev: " << ttcCamPrev << " - ttcCamCurr: " << ttcCamCurr << endl; 
+    ttcCamPrev = ttcCamCurr;
 }
 
 
@@ -282,6 +290,7 @@ void computeTTCLidar(std::vector<LidarPoint> &lidarPointsPrev,
     std::vector<float> lidarPointXCurr;
     std::vector<float> filteredLidarPointXPrev;
     std::vector<float> filteredLidarPointXCurr;
+    static double ttcLidarPrev = 0; 
 
     // copy lidar point --> X
     for (auto ldit = lidarPointsPrev.begin(); ldit != lidarPointsPrev.end(); ++ldit)
@@ -307,7 +316,12 @@ void computeTTCLidar(std::vector<LidarPoint> &lidarPointsPrev,
         d1 = (d1 > *ldit)? (*ldit) : d1;
     }
     // compute TTC
-    TTC = d1 / frameRate / (d0 - d1);
+    double ttcLidarCurr = d1 / frameRate / (d0 - d1);
+    double betaCoef = 0.25;
+    TTC = (1 - betaCoef) * ttcLidarPrev + betaCoef * ttcLidarCurr;
+    cout << "Debug: d1: " << d1 << " - d0: " << d0 << " - TTC Lidar: " << TTC << endl; 
+    cout << "Debug: ttcLidarPrev: " << ttcLidarPrev << " - ttcLidarCurr: " << ttcLidarCurr << endl; 
+    ttcLidarPrev = ttcLidarCurr;
 }
 
 
@@ -409,4 +423,5 @@ void matchBoundingBoxes(std::vector<cv::DMatch> &matches, std::map<int, int> &bb
             bbBestMatches.insert(std::make_pair(bbIdx1, bbIdx2));
         }
     }
+    cout << "Debug: bounding box bestMatches size: " << bbBestMatches.size() << endl; 
 }
