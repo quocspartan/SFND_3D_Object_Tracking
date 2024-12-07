@@ -23,6 +23,11 @@
 
 using namespace std;
 
+vector<double> ttcLidar;
+vector<double> ttcLidarLPF;
+vector<double> ttcCamera;
+vector<double> ttcCameraLPF;
+
 /* MAIN PROGRAM */
 int main(int argc, const char *argv[])
 {
@@ -36,7 +41,7 @@ int main(int argc, const char *argv[])
     string imgPrefix = "KITTI/2011_09_26/image_02/data/000000"; // left camera, color
     string imgFileType = ".png";
     int imgStartIndex = 0; // first file index to load (assumes Lidar and camera names have identical naming convention)
-    int imgEndIndex = 10;   // last file index to load
+    int imgEndIndex = 20;   // last file index to load
     int imgStepWidth = 1; 
     int imgFillWidth = 4;  // no. of digits which make up the file index (e.g. img-0001.png)
 
@@ -79,6 +84,7 @@ int main(int argc, const char *argv[])
     vector<std::size_t> matchedKeypoints;
     vector<double> timeKeypointsDetector;
     vector<double> timeDescriptorExtraction;
+
     double t = 0; 
     bool saveImage = true;
     /* MAIN LOOP OVER ALL IMAGES */
@@ -162,7 +168,7 @@ int main(int argc, const char *argv[])
 
         // extract 2D keypoints from current image
         vector<cv::KeyPoint> keypoints; // create empty feature list for current image
-        string detectorType = "SHITOMASI";
+        string detectorType = "FAST";
 
         if (detectorType.compare("SHITOMASI") == 0)
         {
@@ -222,7 +228,7 @@ int main(int argc, const char *argv[])
         /* EXTRACT KEYPOINT DESCRIPTORS */
 
         cv::Mat descriptors;
-        string descriptorType = "BRIEF"; // BRISK, BRIEF, ORB, FREAK, AKAZE, SIFT
+        string descriptorType = "ORB"; // BRISK, BRIEF, ORB, FREAK, AKAZE, SIFT
         descKeypoints((dataBuffer.end() - 1)->keypoints, (dataBuffer.end() - 1)->cameraImg, descriptors, descriptorType, t);
         timeDescriptorExtraction.push_back(t);
         // push descriptors for current frame to end of data buffer
@@ -316,6 +322,9 @@ int main(int argc, const char *argv[])
 
                         cv::Mat resizeMatchImg;
                         cv::resize(matchImg, resizeMatchImg, cv::Size(), 0.70, 0.70);
+                        char str[200];
+                        sprintf(str, "Frame Index: %lu", imgIndex);
+                        putText(resizeMatchImg, str, cv::Point2f(80, 50), cv::FONT_HERSHEY_PLAIN, 2, cv::Scalar(0,0,255));
                         string windowName = "Matching keypoints between two camera images";
                         cv::namedWindow(windowName, 7);
                         cv::imshow(windowName, resizeMatchImg);
@@ -335,7 +344,7 @@ int main(int argc, const char *argv[])
                     computeTTCCamera((dataBuffer.end() - 2)->keypoints, (dataBuffer.end() - 1)->keypoints, currBB->kptMatches, sensorFrameRate, ttcCamera);
                     //// EOF STUDENT ASSIGNMENT
 
-                    bVis = true;
+                    bVis = false;
                     if (bVis)
                     {
                         cv::Mat visImg = (dataBuffer.end() - 1)->cameraImg.clone();
@@ -343,7 +352,7 @@ int main(int argc, const char *argv[])
                         cv::rectangle(visImg, cv::Point(currBB->roi.x, currBB->roi.y), cv::Point(currBB->roi.x + currBB->roi.width, currBB->roi.y + currBB->roi.height), cv::Scalar(0, 255, 0), 2);
                         
                         char str[200];
-                        sprintf(str, "FrameIdx: %d, TTC Lidar : %f s, TTC Camera : %f s", imgIndex, ttcLidar, ttcCamera);
+                        sprintf(str, "FrameIdx: %lu, TTC Lidar : %f s, TTC Camera : %f s", imgIndex, ttcLidar, ttcCamera);
                         putText(visImg, str, cv::Point2f(80, 50), cv::FONT_HERSHEY_PLAIN, 2, cv::Scalar(0,0,255));
 
                         string windowName = "Final Results : TTC";
@@ -370,5 +379,22 @@ int main(int argc, const char *argv[])
 
     } // eof loop over all images
 
+    // Report summary
+    cout << "==============================================================================================================================" << endl; 
+    cout << "==============================================================================================================================" << endl; 
+    cout << "Idx  ; TTC Lidar    ; TTC Lidar LPF   ; TTC Camera    ; TTC Camera LPF " << endl;
+    for (std::size_t i = 0; i < ttcLidar.size(); i++)
+    {
+        cout << std::left << std::setw(5) << i << ";"; 
+        cout << " "; //spacing
+        cout << std::setw(13) << fixed << setprecision(6)<< ttcLidar.at(i) << ";"; 
+        cout << " "; //spacing
+        cout << std::setw(16) << fixed << setprecision(6)<< ttcLidarLPF.at(i) << ";";
+        cout << " "; //spacing
+        cout << std::setw(14) << fixed << setprecision(6)<< ttcCamera.at(i) << ";"; 
+        cout << " "; //spacing
+        cout << std::setw(16) << fixed << setprecision(6)<< ttcCameraLPF.at(i) << ";";
+        cout << endl;  
+    }
     return 0;
 }

@@ -10,6 +10,10 @@
 
 using namespace std;
 
+extern vector<double> ttcLidar;
+extern vector<double> ttcLidarLPF;
+extern vector<double> ttcCamera;
+extern vector<double> ttcCameraLPF;
 
 // Create groups of Lidar points whose projection into the camera falls into the same bounding box
 void clusterLidarWithROI(std::vector<BoundingBox> &boundingBoxes, std::vector<LidarPoint> &lidarPoints, float shrinkFactor, cv::Mat &P_rect_xx, cv::Mat &R_rect_xx, cv::Mat &RT)
@@ -279,8 +283,9 @@ void computeTTCCamera(std::vector<cv::KeyPoint> &kptsPrev, std::vector<cv::KeyPo
     cout << "Debug: meanDistRatio: " << meanDistRatio << " - TTC Cam: " << TTC << endl; 
     cout << "Debug: ttcCamPrev: " << ttcCamPrev << " - ttcCamCurr: " << ttcCamCurr << endl; 
     ttcCamPrev = ttcCamCurr;
+    ttcCamera.push_back(ttcCamCurr);
+    ttcCameraLPF.push_back(TTC);
 }
-
 
 
 void computeTTCLidar(std::vector<LidarPoint> &lidarPointsPrev,
@@ -322,6 +327,8 @@ void computeTTCLidar(std::vector<LidarPoint> &lidarPointsPrev,
     cout << "Debug: d1: " << d1 << " - d0: " << d0 << " - TTC Lidar: " << TTC << endl; 
     cout << "Debug: ttcLidarPrev: " << ttcLidarPrev << " - ttcLidarCurr: " << ttcLidarCurr << endl; 
     ttcLidarPrev = ttcLidarCurr;
+    ttcLidar.push_back(ttcLidarCurr);
+    ttcLidarLPF.push_back(TTC);
 }
 
 
