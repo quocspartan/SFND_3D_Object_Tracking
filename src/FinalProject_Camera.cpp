@@ -79,7 +79,7 @@ int main(int argc, const char *argv[])
     vector<double> timeKeypointsDetector;
     vector<double> timeDescriptorExtraction;
     double t = 0; 
-
+    bool saveImage = true;
     /* MAIN LOOP OVER ALL IMAGES */
 
     for (size_t imgIndex = 0; imgIndex <= imgEndIndex - imgStartIndex; imgIndex+=imgStepWidth)
@@ -156,7 +156,7 @@ int main(int argc, const char *argv[])
 
         // extract 2D keypoints from current image
         vector<cv::KeyPoint> keypoints; // create empty feature list for current image
-        string detectorType = "FAST";
+        string detectorType = "SHITOMASI";
 
         if (detectorType.compare("SHITOMASI") == 0)
         {
@@ -216,7 +216,7 @@ int main(int argc, const char *argv[])
         /* EXTRACT KEYPOINT DESCRIPTORS */
 
         cv::Mat descriptors;
-        string descriptorType = "ORB"; // BRISK, BRIEF, ORB, FREAK, AKAZE, SIFT
+        string descriptorType = "BRIEF"; // BRISK, BRIEF, ORB, FREAK, AKAZE, SIFT
         descKeypoints((dataBuffer.end() - 1)->keypoints, (dataBuffer.end() - 1)->cameraImg, descriptors, descriptorType, t);
         timeDescriptorExtraction.push_back(t);
         // push descriptors for current frame to end of data buffer
@@ -297,6 +297,35 @@ int main(int argc, const char *argv[])
                     //// TASK FP.4 -> compute time-to-collision based on camera (implement -> computeTTCCamera)
                     double ttcCamera;
                     clusterKptMatchesWithROI(*currBB, (dataBuffer.end() - 2)->keypoints, (dataBuffer.end() - 1)->keypoints, (dataBuffer.end() - 1)->kptMatches);                    
+                    // visualize keypoint matches between current and previous image
+                    bVis = false;
+                    if (bVis)
+                    {
+                        cv::Mat matchImg = ((dataBuffer.end() - 1)->cameraImg).clone();
+                        cv::drawMatches((dataBuffer.end() - 2)->cameraImg, (dataBuffer.end() - 2)->keypoints,
+                                        (dataBuffer.end() - 1)->cameraImg, (dataBuffer.end() - 1)->keypoints,
+                                        currBB->kptMatches, matchImg,
+                                        cv::Scalar::all(-1), cv::Scalar::all(-1),
+                                        vector<char>(), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
+
+                        cv::Mat resizeMatchImg;
+                        cv::resize(matchImg, resizeMatchImg, cv::Size(), 0.70, 0.70);
+                        string windowName = "Matching keypoints between two camera images";
+                        cv::namedWindow(windowName, 7);
+                        cv::imshow(windowName, resizeMatchImg);
+                        // Save images in output file if true
+                        if (saveImage)
+                        {
+                            std::string keypointMatchesFilename = "KeyPtMatch_" + std::to_string(imgIndex) + ".png";
+                            bool success = cv::imwrite(keypointMatchesFilename, resizeMatchImg);
+                        }
+                        else
+                        {
+                            cout << "Press key to continue to next frame" << endl;
+                            cv::waitKey(0);
+                        }
+                    }
+                    
                     computeTTCCamera((dataBuffer.end() - 2)->keypoints, (dataBuffer.end() - 1)->keypoints, currBB->kptMatches, sensorFrameRate, ttcCamera);
                     //// EOF STUDENT ASSIGNMENT
 
@@ -314,8 +343,17 @@ int main(int argc, const char *argv[])
                         string windowName = "Final Results : TTC";
                         cv::namedWindow(windowName, 4);
                         cv::imshow(windowName, visImg);
-                        cout << "Press key to continue to next frame" << endl;
-                        cv::waitKey(0);
+                        // Save images in output file if true
+                        if (saveImage)
+                        {
+                            std::string keypointMatchesFilename = "FinalResult" + std::to_string(imgIndex) + ".png";
+                            bool success = cv::imwrite(keypointMatchesFilename, visImg);
+                        }
+                        else
+                        {
+                            cout << "Press key to continue to next frame" << endl;
+                            cv::waitKey(0);
+                        }
                     }
                     bVis = false;
 
