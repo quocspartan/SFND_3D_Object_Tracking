@@ -194,6 +194,7 @@ void clusterKptMatchesWithROI(BoundingBox &boundingBox, std::vector<cv::KeyPoint
             cv::Point2f diff = keypointCurrFrame.pt - keypointPrevFrame.pt; 
             float eucDist = cv::sqrt(diff.x * diff.x + diff.y * diff.y);
             distKeypointMatches.push_back(eucDist); 
+            boundingBox.kptMatches.push_back(*it);
         }
     }
     // Compute q1, q3 and interquartile range
