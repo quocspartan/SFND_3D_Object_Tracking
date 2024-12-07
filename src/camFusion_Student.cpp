@@ -157,6 +157,28 @@ static float percentile(const std::vector<float> &dataIn, float p)
     }
 }
 
+// This function is to remove the outlier based on interquartile range
+static std::vector<float> removeOutliers(const std::vector<float> &data)
+{
+    std::vector<float> sorted_data = data;
+    std::sort(sorted_data.begin(), sorted_data.end());
+
+    float q1 = percentile(sorted_data, 0.25);
+    float q3 = percentile(sorted_data, 0.75);
+    float iqr = q3 - q1;
+
+    std::vector<float> filtered_data;
+    for (float x : data)
+    {
+        if (x >= q1 - 1.5 * iqr && x <= q3 + 1.5 * iqr)
+        {
+            filtered_data.push_back(x);
+        }
+    }
+
+    return filtered_data;
+}
+
 // associate a given bounding box with the keypoints it contains
 void clusterKptMatchesWithROI(BoundingBox &boundingBox, std::vector<cv::KeyPoint> &kptsPrev, std::vector<cv::KeyPoint> &kptsCurr, std::vector<cv::DMatch> &kptMatches)
 {
@@ -209,10 +231,40 @@ void computeTTCCamera(std::vector<cv::KeyPoint> &kptsPrev, std::vector<cv::KeyPo
 }
 
 
+
 void computeTTCLidar(std::vector<LidarPoint> &lidarPointsPrev,
                      std::vector<LidarPoint> &lidarPointsCurr, double frameRate, double &TTC)
 {
-    // ...
+    std::vector<float> lidarPointXPrev;
+    std::vector<float> lidarPointXCurr;
+    std::vector<float> filteredLidarPointXPrev;
+    std::vector<float> filteredLidarPointXCurr;
+
+    // copy lidar point --> X
+    for (auto ldit = lidarPointsPrev.begin(); ldit != lidarPointsPrev.end(); ++ldit)
+    {
+        lidarPointXPrev.push_back(ldit->x);
+    }
+    for (auto ldit = lidarPointsCurr.begin(); ldit != lidarPointsCurr.end(); ++ldit)
+    {
+        lidarPointXCurr.push_back(ldit->x);
+    }
+    // remove the outliers
+    filteredLidarPointXPrev = removeOutliers(lidarPointXPrev);
+    filteredLidarPointXCurr = removeOutliers(lidarPointXCurr);    
+    // find the closest lidar point
+    float d0 = INT_MAX; 
+    float d1 = INT_MAX; 
+    for (auto ldit = filteredLidarPointXPrev.begin(); ldit < filteredLidarPointXPrev.end(); ldit++)
+    {
+        d0 = (d0 > *ldit)? (*ldit) : d0;
+    }
+    for (auto ldit = filteredLidarPointXCurr.begin(); ldit < filteredLidarPointXCurr.end(); ldit++)
+    {
+        d1 = (d1 > *ldit)? (*ldit) : d1;
+    }
+    // compute TTC
+    TTC = d1 / frameRate / (d0 - d1);
 }
 
 
