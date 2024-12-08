@@ -74,6 +74,9 @@ To make the TTC more robust, I have implemented IQR method to filter out the out
 The above chart shows the lidar based TTC over 20 consecutive frames. The TTC value after LPF is still varying a lot, however the linear line shows the time-to-collision is decreasing over time. 
 
 ### Associate Keypoint Correspondences with Bounding Boxes
+All the keypoint matches belong to the current frame bounding box are grouped and filtered by eleminating the outlier matches based on Euclidean distance between them. 
+
+<img src="media/keypointMatches/keypointMatchesOutput.gif" width="1200"  />
 
 ### Compute Camera-based TTC
 
