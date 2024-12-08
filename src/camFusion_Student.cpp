@@ -296,6 +296,103 @@ void computeTTCCamera(std::vector<cv::KeyPoint> &kptsPrev, std::vector<cv::KeyPo
     ttcCameraLPF.push_back(TTC);
 }
 
+void showLidarTopview(std::vector<LidarPoint> &oldlidarPoints, std::vector<LidarPoint> &newlidarPoints, double minXPrev, double minXCurr )
+{
+    cv::Size worldSize(6.0, 10.0); // width and height of sensor field in m - as top view 10m 20m length
+    cv::Size imageSize(1200, 2000); // corresponding top view image in pixel - map 10m in world space to 1000px, and 20m world to 2000px
+
+    // create topview image - black
+    cv::Mat topviewImg(imageSize, CV_8UC3, cv::Scalar(0, 0, 0));
+
+    // plot Lidar points into image
+    // for (auto it = newlidarPoints.begin(); it != newlidarPoints.end(); ++it)
+    // {
+    //     // coordinates x in driving direction and y in world metres - left
+    //     float xw = (*it).x; // world position in m with x facing forward from sensor
+    //     float yw = (*it).y; // world position in m with y facing left from sensor
+    //     float iw = (*it).r; // get the relectivity value 0 to 1
+
+    //     // convert from world coordinates to image coordinates
+    //     // scaled and add height of image
+    //     // ampping between pixels and world
+    //     int y = (-xw * imageSize.height / worldSize.height) + imageSize.height;
+    //     int x = (-yw * imageSize.width / worldSize.width) + imageSize.width / 2;
+
+    //     // get the z world coordinate 0.0 would be the height on the lidar sensor
+    //     float zw = (*it).z; // height above the road surface
+    //     double minZ = -1.40; // road surface is about 1.55m down, so 1.4 is ignore all points below z threshold
+
+    //     // 2. Remove all Lidar points on the road surface while preserving
+    //     // measurements on the obstacles in the scene.
+    //     // if the z is sufficiently high above the road surface
+    //     if(zw > minZ)
+    //     {
+    //         // get the scaling value
+    //         float val = it->x; // distance in driving direction
+    //         float maxVal = worldSize.height; //sets the max value of distinace in front of car
+    //         int green = std::min(255, (int)(255 * iw)); // get the shade of green dependendent on relectivity
+    //         cv::circle(topviewImg, cv::Point(x, y), 5, cv::Scalar(0, green, 0), -1);
+    //     }
+
+    // }
+
+    // plot Lidar points into image
+    for (auto it = oldlidarPoints.begin(); it != oldlidarPoints.end(); ++it)
+    {
+        // coordinates x in driving direction and y in world metres - left
+        float xw = (*it).x; // world position in m with x facing forward from sensor
+        float yw = (*it).y; // world position in m with y facing left from sensor
+        float iw = (*it).r; // get the relectivity value 0 to 1
+
+        // convert from world coordinates to image coordinates
+        // scaled and add height of image
+        // ampping between pixels and world
+        int y = (-xw * imageSize.height / worldSize.height) + imageSize.height;
+        int x = (-yw * imageSize.width / worldSize.width) + imageSize.width / 2;
+
+        // get the z world coordinate 0.0 would be the height on the lidar sensor
+        float zw = (*it).z; // height above the road surface
+        double minZ = -1.40; // road surface is about 1.55m down, so 1.4 is ignore all points below z threshold
+
+        // 2. Remove all Lidar points on the road surface while preserving
+        // measurements on the obstacles in the scene.
+        // if the z is sufficiently high above the road surface
+        if(zw > minZ)
+        {
+            // get the scaling value
+            float val = it->x; // distance in driving direction
+            float maxVal = worldSize.height; //sets the max value of distinace in front of car
+
+            // 1. Change the color of the Lidar points to show reflectivity
+            int red = std::min(255, (int)(255 * iw)); // get the shade of red dependendent on relectivity
+            cv::circle(topviewImg, cv::Point(x, y), 5, cv::Scalar(0, 0, red), -1);
+
+            // could replace a distance colouring with a reflectivity colouring to see which objects reflect well and which don't
+        }
+    }
+
+    // plot distance markers - to get rough idea how far objects are away
+    float lineSpacing = 2.0; // gap between distance markers
+    int nMarkers = floor(worldSize.height / lineSpacing); // gives 10 markers for image
+    // horizontal line every 2m
+    for (size_t i = 0; i < nMarkers; ++i)
+    {
+        int y = (-(i * lineSpacing) * imageSize.height / worldSize.height) + imageSize.height;
+        cv::line(topviewImg, cv::Point(0, y), cv::Point(imageSize.width, y), cv::Scalar(255, 0, 0)); // blue lines to show distnace markers
+    }
+
+    int p0 = (-minXPrev * imageSize.height / worldSize.height) + imageSize.height;
+    cv::line(topviewImg, cv::Point(0, p0), cv::Point(imageSize.width, p0), cv::Scalar(255, 0, 255)); // magenta
+
+    int c0 = (-minXCurr * imageSize.height / worldSize.height) + imageSize.height;
+    cv::line(topviewImg, cv::Point(0, c0), cv::Point(imageSize.width, c0), cv::Scalar(255, 255, 0)); // yellow
+
+    // display image
+    string windowName = "Top-View Perspective of LiDAR data";
+    cv::namedWindow(windowName, 2);
+    cv::imshow(windowName, topviewImg);
+    cv::waitKey(0); // wait for key to be pressed
+}
 
 void computeTTCLidar(std::vector<LidarPoint> &lidarPointsPrev,
                      std::vector<LidarPoint> &lidarPointsCurr, double frameRate, double &TTC)
@@ -329,6 +426,9 @@ void computeTTCLidar(std::vector<LidarPoint> &lidarPointsPrev,
     {
         d1 = (d1 > *ldit)? (*ldit) : d1;
     }
+    // show lidar top-view
+    showLidarTopview(lidarPointsPrev, lidarPointsCurr, d0, d1);
+
     // compute TTC
     double ttcLidarCurr = d1 / frameRate / (d0 - d1);
     double betaCoef = 0.25;
