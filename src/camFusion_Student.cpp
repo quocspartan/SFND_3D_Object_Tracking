@@ -305,36 +305,36 @@ void showLidarTopview(std::vector<LidarPoint> &oldlidarPoints, std::vector<Lidar
     cv::Mat topviewImg(imageSize, CV_8UC3, cv::Scalar(0, 0, 0));
 
     // plot Lidar points into image
-    // for (auto it = newlidarPoints.begin(); it != newlidarPoints.end(); ++it)
-    // {
-    //     // coordinates x in driving direction and y in world metres - left
-    //     float xw = (*it).x; // world position in m with x facing forward from sensor
-    //     float yw = (*it).y; // world position in m with y facing left from sensor
-    //     float iw = (*it).r; // get the relectivity value 0 to 1
+    for (auto it = newlidarPoints.begin(); it != newlidarPoints.end(); ++it)
+    {
+        // coordinates x in driving direction and y in world metres - left
+        float xw = (*it).x; // world position in m with x facing forward from sensor
+        float yw = (*it).y; // world position in m with y facing left from sensor
+        float iw = (*it).r; // get the relectivity value 0 to 1
 
-    //     // convert from world coordinates to image coordinates
-    //     // scaled and add height of image
-    //     // ampping between pixels and world
-    //     int y = (-xw * imageSize.height / worldSize.height) + imageSize.height;
-    //     int x = (-yw * imageSize.width / worldSize.width) + imageSize.width / 2;
+        // convert from world coordinates to image coordinates
+        // scaled and add height of image
+        // ampping between pixels and world
+        int y = (-xw * imageSize.height / worldSize.height) + imageSize.height;
+        int x = (-yw * imageSize.width / worldSize.width) + imageSize.width / 2;
 
-    //     // get the z world coordinate 0.0 would be the height on the lidar sensor
-    //     float zw = (*it).z; // height above the road surface
-    //     double minZ = -1.40; // road surface is about 1.55m down, so 1.4 is ignore all points below z threshold
+        // get the z world coordinate 0.0 would be the height on the lidar sensor
+        float zw = (*it).z; // height above the road surface
+        double minZ = -1.40; // road surface is about 1.55m down, so 1.4 is ignore all points below z threshold
 
-    //     // 2. Remove all Lidar points on the road surface while preserving
-    //     // measurements on the obstacles in the scene.
-    //     // if the z is sufficiently high above the road surface
-    //     if(zw > minZ)
-    //     {
-    //         // get the scaling value
-    //         float val = it->x; // distance in driving direction
-    //         float maxVal = worldSize.height; //sets the max value of distinace in front of car
-    //         int green = std::min(255, (int)(255 * iw)); // get the shade of green dependendent on relectivity
-    //         cv::circle(topviewImg, cv::Point(x, y), 5, cv::Scalar(0, green, 0), -1);
-    //     }
+        // 2. Remove all Lidar points on the road surface while preserving
+        // measurements on the obstacles in the scene.
+        // if the z is sufficiently high above the road surface
+        if(zw > minZ)
+        {
+            // get the scaling value
+            float val = it->x; // distance in driving direction
+            float maxVal = worldSize.height; //sets the max value of distinace in front of car
+            int green = std::min(255, (int)(255 * iw)); // get the shade of green dependendent on relectivity
+            cv::circle(topviewImg, cv::Point(x, y), 5, cv::Scalar(0, green, 0), -1);
+        }
 
-    // }
+    }
 
     // plot Lidar points into image
     for (auto it = oldlidarPoints.begin(); it != oldlidarPoints.end(); ++it)
@@ -427,7 +427,7 @@ void computeTTCLidar(std::vector<LidarPoint> &lidarPointsPrev,
         d1 = (d1 > *ldit)? (*ldit) : d1;
     }
     // show lidar top-view
-    showLidarTopview(lidarPointsPrev, lidarPointsCurr, d0, d1);
+    // showLidarTopview(lidarPointsPrev, lidarPointsCurr, d0, d1);
 
     // compute TTC
     double ttcLidarCurr = d1 / frameRate / (d0 - d1);
