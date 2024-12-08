@@ -50,6 +50,7 @@ In this final project, you will implement the missing parts in the schematic. To
 [image7]: ./media/TTC_from_Camera.png "Camera based TTC"
 [image8]: ./media/TTC_from_LidarPoints.png "Lidar based TTC"
 [image9]: ./media/TTC_lidar_graph.png "Lidar based TTC measurement"
+[image10]: ./media/TTC_camera_graph.png "Camera based TTC measurement"
 
 ### Match 3D Objects
 Implement the method `matchBoundingBoxes`, which takes as input both the previous and the current data frames and provides as output the ids of the matched regions of interest (i.e. the boxID property). Matches must be the ones with the highest number of keypoint correspondences.
@@ -74,11 +75,24 @@ To make the TTC more robust, I have implemented IQR method to filter out the out
 The above chart shows the lidar based TTC over 20 consecutive frames. The TTC value after LPF is still varying a lot, however the linear line shows the time-to-collision is decreasing over time. 
 
 ### Associate Keypoint Correspondences with Bounding Boxes
+The method `clusterKptMatchesWithROI` is to repare the TTC computation based on camera measurements by associating keypoint correspondences to the bounding boxes which enclose them. All matches which satisfy this condition must be added to a vector in the respective bounding box.
+
 All the keypoint matches belong to the current frame bounding box are grouped and filtered by eleminating the outlier matches based on Euclidean distance between them. 
 
 <img src="media/keypointMatches/keypointMatchesOutput.gif" width="1200"  />
 
 ### Compute Camera-based TTC
+The method `computeTTCCamera` is to compute the time-to-collision (TTC) for Camera. The below figure shows how to estimate the distance from camera to preceding vehicle based on the height H. 
+
+![alt text][image2]
+
+The following set of equations shows how to calculate the TTC using the projections from camera sensor.
+
+![alt text][image7]
+
+Similar to lidar based TTC, in order to make the TTC more robust, I have implemented IQR method to filter out the outliers and at the end using a low pass filter to smoothen the TTC output. 
+
+![alt text][image10]
 
 ### Performance Evaluation 1
 
