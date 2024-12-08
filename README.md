@@ -49,6 +49,7 @@ In this final project, you will implement the missing parts in the schematic. To
 [image6]: ./media/KeyPoints_Scaling.png "Keypoints Scaling"
 [image7]: ./media/TTC_from_Camera.png "Camera based TTC"
 [image8]: ./media/TTC_from_LidarPoints.png "Lidar based TTC"
+[image9]: ./media/TTC_lidar_graph.png "Lidar based TTC measurement"
 
 ### Match 3D Objects
 Implement the method `matchBoundingBoxes`, which takes as input both the previous and the current data frames and provides as output the ids of the matched regions of interest (i.e. the boxID property). Matches must be the ones with the highest number of keypoint correspondences.
@@ -66,7 +67,11 @@ The following formulars will be used for computing TTC from the lidar points
 
 ![alt text][image8]
 
-To the the TTC more robust, I have implemented IQR method to filter out the outliers and at the end using a low pass filter to smoothen the TTC output. 
+To make the TTC more robust, I have implemented IQR method to filter out the outliers and at the end using a low pass filter to smoothen the TTC output. 
+
+![alt text][image9]
+
+The above chart shows the lidar based TTC over 20 consecutive frames. The TTC value after LPF is still varying a lot, however the linear line shows the time-to-collision is decreasing over time. 
 
 ### Associate Keypoint Correspondences with Bounding Boxes
 
