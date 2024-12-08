@@ -60,7 +60,7 @@ The bounding box pair with the highest number of keypoint match occurrences is t
 ### Compute Lidar-based TTC
 The method `computeTTCLidar` is to compute the time-to-collision (TTC) in second for all matched 3D objects using only Lidar measurements from the matched bounding boxes between current and previous frame.
 
-![alt text][image2]
+![alt text][image3]
 
 The following formulars will be used for computing TTC from the lidar points
 
