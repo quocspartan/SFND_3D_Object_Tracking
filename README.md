@@ -39,3 +39,25 @@ In this final project, you will implement the missing parts in the schematic. To
 
 ### 3D Object Tracking Overview
 <img src="media/finalResult/finalOutput.gif" width="1200"  />
+
+[//]: # (Image References)
+[image1]: ./media/3D_Object_creation.png "3D Object Creation"
+[image2]: ./media/Compute_TTC_from_Camera.png "Compute Camera TTC"
+[image3]: ./media/Compute_TTC_from_LidarPoints.png "Compute Lidar TTC"
+[image4]: ./media/Crop_and_Cluster_LidarPoints.png "Crop Cluster Lidar Points"
+[image5]: ./media/Detect_And_Classify_Objects.png "Detect Classify Objects"
+[image6]: ./media/KeyPoints_Scaling.png "Keypoints Scaling"
+[image7]: ./media/TTC_from_Camera.png "Camera based TTC"
+[image8]: ./media/TTC_from_LidarPoints.png "Lidar based TTC"
+
+### Match 3D Objects
+
+### Compute Lidar-based TTC
+
+### Associate Keypoint Correspondences with Bounding Boxes
+
+### Compute Camera-based TTC
+
+### Performance Evaluation 1
+
+### Performance Evaluation 2
