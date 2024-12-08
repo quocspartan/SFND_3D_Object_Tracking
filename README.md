@@ -52,6 +52,7 @@ In this final project, you will implement the missing parts in the schematic. To
 [image9]: ./media/TTC_lidar_graph.png "Lidar based TTC measurement"
 [image10]: ./media/TTC_camera_graph.png "Camera based TTC measurement"
 [image11]: ./media/TTC_data_variations.png "Lidar based TTC variations"
+[image12]: ./media/Lidar_topview.png "Lidar top view"
 
 ### Match 3D Objects
 Implement the method `matchBoundingBoxes`, which takes as input both the previous and the current data frames and provides as output the ids of the matched regions of interest (i.e. the boxID property). Matches must be the ones with the highest number of keypoint correspondences.
@@ -101,5 +102,6 @@ The lidar based TTC estimation sometimes goes wildly, as you can see the below g
 There maybe two reasons: 
 1. Because of using the constant velocity model, so it couldn't reflect exactly when the preceding vehicle speed changes. 
 2. Probably the TTC estimation based on comparing between the closest lidar points between the current frame to the previous frame. In order to improve, the averaging of distance from the lidar points may help. 
+![alt text][image12]
 
 ### Performance Evaluation 2
