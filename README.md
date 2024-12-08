@@ -51,8 +51,22 @@ In this final project, you will implement the missing parts in the schematic. To
 [image8]: ./media/TTC_from_LidarPoints.png "Lidar based TTC"
 
 ### Match 3D Objects
+Implement the method `matchBoundingBoxes`, which takes as input both the previous and the current data frames and provides as output the ids of the matched regions of interest (i.e. the boxID property). Matches must be the ones with the highest number of keypoint correspondences.
+
+To match the bounding box between frames, we go through all the keypoint match pairs and associate the respective bounding boxes in both frames. We then store the unique box ID of the matches and create a bounding box match pair.
+
+The bounding box pair with the highest number of keypoint match occurrences is then selected as the best pair.
 
 ### Compute Lidar-based TTC
+The method `computeTTCLidar` is to compute the time-to-collision (TTC) in second for all matched 3D objects using only Lidar measurements from the matched bounding boxes between current and previous frame.
+
+![alt text][image2]
+
+The following formulars will be used for computing TTC from the lidar points
+
+![alt text][image8]
+
+To the the TTC more robust, I have implemented IQR method to filter out the outliers and at the end using a low pass filter to smoothen the TTC output. 
 
 ### Associate Keypoint Correspondences with Bounding Boxes
 
