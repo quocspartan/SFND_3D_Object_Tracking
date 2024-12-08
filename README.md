@@ -53,6 +53,7 @@ In this final project, you will implement the missing parts in the schematic. To
 [image10]: ./media/TTC_camera_graph.png "Camera based TTC measurement"
 [image11]: ./media/TTC_data_variations.png "Lidar based TTC variations"
 [image12]: ./media/Lidar_topview.png "Lidar top view"
+[image13]: ./media/Perf_evaluation2.png "Camera based TTC evaluation"
 
 ### Match 3D Objects
 Implement the method `matchBoundingBoxes`, which takes as input both the previous and the current data frames and provides as output the ids of the matched regions of interest (i.e. the boxID property). Matches must be the ones with the highest number of keypoint correspondences.
@@ -103,5 +104,36 @@ There maybe two reasons:
 1. Because of using the constant velocity model, so it couldn't reflect exactly when the preceding vehicle speed changes. 
 2. Probably the TTC estimation based on comparing between the closest lidar points between the current frame to the previous frame. In order to improve, the averaging of distance from the lidar points may help. 
 ![alt text][image12]
+The above graph shows the lidar points: green - curent frame, red - previous frame. 
 
 ### Performance Evaluation 2
+
+The below graph compare the 3 best methods picked: 
+1. FAST + BRIEF: time performance is good, however the TTC estimation is not stable
+2. AKAZE + AKAZE: time performance is fairly ok, and the TTC estimation is quite stable. 
+2. AKAZE + SIFT: time performance is fairly ok, and the TTC estimation is quite stable. 
+
+![alt text][image13]
+
+Image index    |  FAST_BRIEF  |    AKAZE_AKAZE   |     AKAZE_SIFT
+-------------  | :----------: | :--------------: | :--------------:   
+0	             |  13.518675	  |     12.55836	   |     15.967959
+1	             |  13.506107   |	    13.074552    |     16.120688
+2	             |  15.596969   |	    15.701079    |     16.911232
+3	             |  26.963865   |	    14.281383    |     16.666767
+4	             |  22.09877	  |     15.829577	   |     17.58728
+5	             |  22.303338   |	    15.898827    |     17.220199
+6	             |  17.623101   |	    15.972328    |     17.982874
+7	             |  12.293731   |	    15.254414    |     15.962702
+8	             |  15.407571   |	    14.968224    |     16.335584
+9	             |  14.205937   |	    14.155646    |     17.058239
+10	           |  12.605548   |    	12.086255	   |     13.510292
+11	           |  15.055029   |    	13.258387	   |     14.511076
+12	           |  9.027976	  |     11.881726	   |     13.246987
+13	           |  10.285496   |    	11.156118	   |     12.078267
+14	           |  11.306023   |    	12.27736	   |     13.619235
+15	           |  10.719643   |    	13.622308	   |     12.579659
+16	           |  10.899395   |    	10.637525	   |     11.132771
+17	           |  8.996619	  |     10.224004	   |     10.626854
+18	           |  11.627424   |    	9.18958	     |     10.598574
+19	           |  9.77562     |     9.865044	   |     10.470493
