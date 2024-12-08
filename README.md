@@ -34,3 +34,8 @@ In this final project, you will implement the missing parts in the schematic. To
 2. Make a build directory in the top level project directory: `mkdir build && cd build`
 3. Compile: `cmake .. && make`
 4. Run it: `./3D_object_tracking`.
+
+## Final Report
+
+### 3D Object Tracking Overview
+<img src="media/finalResult/finalOutput.gif" width="1200"  />
