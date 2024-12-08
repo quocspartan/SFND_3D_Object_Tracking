@@ -167,8 +167,8 @@ static std::vector<float> removeOutliers(const std::vector<float> &data)
     std::vector<float> sorted_data = data;
     std::sort(sorted_data.begin(), sorted_data.end());
 
-    float q1 = percentile(sorted_data, 0.25);
-    float q3 = percentile(sorted_data, 0.75);
+    float q1 = percentile(sorted_data, 0.35f);
+    float q3 = percentile(sorted_data, 0.65f);
     float iqr = q3 - q1;
 
     std::vector<float> filtered_data;
@@ -202,8 +202,8 @@ void clusterKptMatchesWithROI(BoundingBox &boundingBox, std::vector<cv::KeyPoint
         }
     }
     // Compute q1, q3 and interquartile range
-    float q1 = percentile(distKeypointMatches, 0.25f);
-    float q3 = percentile(distKeypointMatches, 0.75f);
+    float q1 = percentile(distKeypointMatches, 0.35f);
+    float q3 = percentile(distKeypointMatches, 0.65f);
     float iqr = q3 - q1;
 
     // Iterate through the matched keypoint pairs in the current bounding box and remove the ones which are outliers from the bounding box
@@ -279,7 +279,16 @@ void computeTTCCamera(std::vector<cv::KeyPoint> &kptsPrev, std::vector<cv::KeyPo
     float ttcCamCurr = -1 / frameRate / (1 - meanDistRatio);
     float betaCamCoef = 0.15; 
     static double ttcCamPrev = 0; 
-    TTC = (1 - betaCamCoef) * ttcCamPrev + betaCamCoef * ttcCamCurr; 
+    static bool lpfInit = true; 
+    if (lpfInit)
+    {
+        TTC = ttcCamCurr;
+        lpfInit = false;
+    }
+    else 
+    {
+        TTC = (1 - betaCamCoef) * ttcCamPrev + betaCamCoef * ttcCamCurr; 
+    }
     cout << "Debug: meanDistRatio: " << meanDistRatio << " - TTC Cam: " << TTC << endl; 
     cout << "Debug: ttcCamPrev: " << ttcCamPrev << " - ttcCamCurr: " << ttcCamCurr << endl; 
     ttcCamPrev = ttcCamCurr;
@@ -323,7 +332,17 @@ void computeTTCLidar(std::vector<LidarPoint> &lidarPointsPrev,
     // compute TTC
     double ttcLidarCurr = d1 / frameRate / (d0 - d1);
     double betaCoef = 0.25;
-    TTC = (1 - betaCoef) * ttcLidarPrev + betaCoef * ttcLidarCurr;
+    static bool lpfInit = true; 
+    if (lpfInit)
+    {
+        TTC = ttcLidarCurr;
+        lpfInit = false;
+    }
+    else 
+    {
+        TTC = (1 - betaCoef) * ttcLidarPrev + betaCoef * ttcLidarCurr;
+    }
+
     cout << "Debug: d1: " << d1 << " - d0: " << d0 << " - TTC Lidar: " << TTC << endl; 
     cout << "Debug: ttcLidarPrev: " << ttcLidarPrev << " - ttcLidarCurr: " << ttcLidarCurr << endl; 
     ttcLidarPrev = ttcLidarCurr;
