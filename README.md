@@ -53,7 +53,14 @@ In this final project, you will implement the missing parts in the schematic. To
 [image10]: ./media/TTC_camera_graph.png "Camera based TTC measurement"
 [image11]: ./media/TTC_data_variations.png "Lidar based TTC variations"
 [image12]: ./media/Lidar_topview.png "Lidar top view"
-[image13]: ./media/Perf_evaluation2.png "Camera based TTC evaluation"
+[image13]: ./media/Detector_descriptor_Best_5.png "Camera based TTC evaluation"
+[image14]: ./media/Detector_AKAZE.png "Detector AKAZE"
+[image15]: ./media/Detector_BRISK.png "Detector BRISK"
+[image16]: ./media/Detector_FAST.png "Detector FAST"
+[image17]: ./media/Detector_Harris.png "Detector Harris"
+[image18]: ./media/Detector_ORB.png "Detector ORB"
+[image19]: ./media/Detector_ShiTomasi.png "Detector Shi-Tomasi"
+[image20]: ./media/Detector_SIFT.png "Detector SIFT"
 
 ### Match 3D Objects
 Implement the method `matchBoundingBoxes`, which takes as input both the previous and the current data frames and provides as output the ids of the matched regions of interest (i.e. the boxID property). Matches must be the ones with the highest number of keypoint correspondences.
@@ -108,32 +115,58 @@ The above graph shows the lidar points: green - curent frame, red - previous fra
 
 ### Performance Evaluation 2
 
-The below graph compare the 3 best methods picked: 
-1. FAST + BRIEF: time performance is good, however the TTC estimation is not stable
-2. AKAZE + AKAZE: time performance is fairly ok, and the TTC estimation is quite stable. 
-2. AKAZE + SIFT: time performance is fairly ok, and the TTC estimation is quite stable. 
+The below graphs compare the different TTCs for all detector/descriptor combinations: 
+1. SHITOMASI detector and all descriptor combinations
+
+![alt text][image19]
+
+2. HARRIS detector and all descriptor combinations
+
+![alt text][image17]
+
+3. FAST detector and all descriptor combinations
+
+![alt text][image16]
+
+4. BRISK detector and all descriptor combinations
+
+![alt text][image15]
+
+5. ORB detector and all descriptor combinations
+
+![alt text][image18]
+
+6. AKAZE detector and all descriptor combinations
+
+![alt text][image14]
+
+7. SIFT detector and all descriptor combinations
+
+![alt text][image20]
+
+From the above comparison, I picked the best 5 in the below graph. Looks like the best accuracy one is AKAZE detector and ORB descriptor. 
 
 ![alt text][image13]
 
-Image index    |  FAST_BRIEF  |    AKAZE_AKAZE   |     AKAZE_SIFT
--------------  | :----------: | :--------------: | :--------------:   
-0	             |  13.518675	  |     12.55836	   |     15.967959
-1	             |  13.506107   |	    13.074552    |     16.120688
-2	             |  15.596969   |	    15.701079    |     16.911232
-3	             |  26.963865   |	    14.281383    |     16.666767
-4	             |  22.09877	  |     15.829577	   |     17.58728
-5	             |  22.303338   |	    15.898827    |     17.220199
-6	             |  17.623101   |	    15.972328    |     17.982874
-7	             |  12.293731   |	    15.254414    |     15.962702
-8	             |  15.407571   |	    14.968224    |     16.335584
-9	             |  14.205937   |	    14.155646    |     17.058239
-10	           |  12.605548   |    	12.086255	   |     13.510292
-11	           |  15.055029   |    	13.258387	   |     14.511076
-12	           |  9.027976	  |     11.881726	   |     13.246987
-13	           |  10.285496   |    	11.156118	   |     12.078267
-14	           |  11.306023   |    	12.27736	   |     13.619235
-15	           |  10.719643   |    	13.622308	   |     12.579659
-16	           |  10.899395   |    	10.637525	   |     11.132771
-17	           |  8.996619	  |     10.224004	   |     10.626854
-18	           |  11.627424   |    	9.18958	     |     10.598574
-19	           |  9.77562     |     9.865044	   |     10.470493
+Image index    |  ShiTomasi_ORB  |    FAST_FREAK   |     BRISK_BRIEF  |     AKAZE_ORB    |     SIFT_BRIEF
+-------------  | :-------------: | :-------------: | :--------------: | :--------------: | :--------------:         
+0	             |    16.179855	   |    12.700775	   |     17.22047	    |     14.133419	   |     11.174084
+1	             |    15.784542	   |    14.003867	   |     18.295011	  |     14.406369	   |     11.312928
+2	             |    15.090405	   |    20.809173	   |     23.142071	  |     15.846591	   |     12.537697
+3	             |    21.92939	   |    17.476459	   |     16.879984	  |     15.491201	   |     15.905578
+4	             |    11.518697	   |    17.580268	   |     21.410786	  |     16.863693	   |     20.019266
+5	             |    14.681608	   |    17.05224	   |     21.703107	  |     16.601338	   |     14.599628
+6	             |    16.349124	   |    4.013378	   |     19.190264	  |     16.110332	   |     13.582231
+7	             |    11.706472	   |    18.627146	   |     20.291999	  |     15.627837	   |     16.754116
+8	             |    13.910589	   |    10.724099	   |     21.593739	  |     14.921236	   |     15.776936
+9	             |    10.721723	   |    10.650783	   |     17.231778	  |     13.580942	   |     13.130799
+10	           |    11.660877	   |    15.474801	   |     14.905772	  |     12.173859	   |     11.345579
+11	           |    11.286141	   |    17.526312	   |     13.565056	  |     13.514442	   |     11.645166
+12	           |    10.760174	   |    12.606194	   |     19.149263	  |     12.89928	   |     10.620103
+13	           |    10.609315	   |    9.202975	   |     14.02347	    |     11.653264	   |     9.990572
+14	           |    10.022262	   |    10.414689	   |     15.842947	  |     11.470208	   |     10.389111
+15	           |    10.886469	   |    9.305059	   |     13.635563	  |     13.090576	   |     9.856369
+16	           |    9.98076 	   |    10.182358	   |     14.473125	  |     10.487956	   |     9.468818
+17	           |    11.838934	   |    7.876246	   |     14.546157	  |     10.198772	   |     8.99303
+18	           |    10.322886	   |    10.95241	   |     11.891726	  |     10.08926	   |     8.548615
+19	           |    15.367574	   |    10.670704	   |     12.779955	  |     10.104216	   |     9.542445
